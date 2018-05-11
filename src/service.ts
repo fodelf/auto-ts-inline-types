@@ -162,7 +162,7 @@ function getDecoration(
     const textAfter = (wrap ? ')' : '') + ': ' + typeName;
     const startPosition = sourceFile.getLineAndCharacterOfPosition(node.pos + leadingTriviaWidth);
     const endPosition = sourceFile.getLineAndCharacterOfPosition(endNode ? endNode.pos : node.end);
-    const isWarning = configuration.features.highlightAny && typeName === 'any';
+    const isWarning = configuration.features.highlightAny && /\bany\b/.test(typeName);
 
     return { textBefore, textAfter, startPosition, endPosition, isWarning };
 }
