@@ -43,7 +43,7 @@ function createServiceForExtension(
         () => updateDecorations(decorationType, service));
     updateDecorations(decorationType, service);
 
-    const fileWatcher = vscode.workspace.createFileSystemWatcher('{!node_modules,**}/*.ts');
+    const fileWatcher = vscode.workspace.createFileSystemWatcher('{!node_modules,**}/*.{ts,js}');
     fileWatcher.onDidCreate(e => service.notifyFileChange(normalizeFileName(e.fsPath), FileChangeTypes.Created));
     fileWatcher.onDidChange(e => service.notifyFileChange(normalizeFileName(e.fsPath), FileChangeTypes.Changed));
     fileWatcher.onDidDelete(e => service.notifyFileChange(normalizeFileName(e.fsPath), FileChangeTypes.Deleted));
@@ -68,7 +68,7 @@ function updateDecorations(
     decorationType: vscode.TextEditorDecorationType,
     service: Service
 ): void {
-    const visibleTextEditors = vscode.window.visibleTextEditors.filter(isTypeScript);
+    const visibleTextEditors = vscode.window.visibleTextEditors.filter(isSupportedLanguage);
     for (const visibleTextEditor of visibleTextEditors) {
         logInfo(`Updating decorations: ${visibleTextEditor.document.fileName}`);
 
@@ -109,6 +109,6 @@ function normalizeFileName(fileName: string): string {
     return fileName.replace(/\\/g, '/');
 }
 
-function isTypeScript(value: vscode.TextEditor): boolean {
-    return value.document.languageId === 'typescript';
+function isSupportedLanguage(value: vscode.TextEditor): boolean {
+    return value.document.languageId === 'typescript' || value.document.languageId === 'javascript';
 }
