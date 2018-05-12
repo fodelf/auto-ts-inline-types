@@ -90,6 +90,21 @@
           "default": 0,
           "minimum": 0,
           "description": "A delay for propagating decoration updates to the editor in milliseconds."
+        },
+        "inlineTypes.decorationStyle": {
+          "type": "string",
+          "default": "opacity: 0.5",
+          "description": "CSS styles for decorations."
+        },
+        "inlineTypes.highlightStyle": {
+          "type": "string",
+          "default": "",
+          "description": "CSS styles for warnings."
+        },
+        "inlineTypes.highlightColor": {
+          "type": "string",
+          "default": "#FF2400",
+          "description": "Color for warnings."
         }
       }
     }
