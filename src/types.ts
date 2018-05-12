@@ -36,6 +36,7 @@ export type FeatureType =
     | 'functionParameterType'
     | 'propertyType'
     | 'objectPatternType'
+    | 'arrayPatternType'
     | 'parameterName'
     | 'highlightAny'
 

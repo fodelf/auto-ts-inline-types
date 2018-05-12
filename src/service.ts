@@ -142,6 +142,14 @@ function getDecorations(
                     }
                 });
                 if (node.parent) skipTypes.add(node.parent);
+            } else if (ts.isArrayBindingPattern(node) && context.configuration.features.arrayPatternType) {
+                node.forEachChild(child => {
+                    if(skipTypes.has(child)) return;
+                    if (ts.isBindingElement(child)) {
+                        result.push(getDecoration(sourceFile!, typeChecker, configuration, child));
+                    }
+                });
+                if (node.parent) skipTypes.add(node.parent);
             } else if ((ts.isCallExpression(node) || ts.isNewExpression(node)) && node.arguments && node.arguments.length > 0 && context.configuration.features.parameterName) {
                 const resolvedSignature = typeChecker.getResolvedSignature(node);
                 for (let i = 0; i < node.arguments.length; ++i) {
