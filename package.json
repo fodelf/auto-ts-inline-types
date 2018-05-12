@@ -6,6 +6,7 @@
   "version": "0.2.0",
   "publisher": "sokra",
   "engines": {
+    "vscode": "^1.22.0"
     "vscode": "^1.20.0"
   },
   "activationEvents": [
@@ -25,8 +26,8 @@
   },
   "dependencies": {
     "chalk": "2.3.2",
-    "typescript": "2.9.0-dev.20180506",
-    "vscode": "1.1.14"
+    "typescript": "2.9.0-dev.20180511",
+    "vscode": "1.1.17"
   },
   "devDependencies": {
     "@types/chalk": "2.2.0",
