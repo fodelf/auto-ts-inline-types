@@ -7,7 +7,6 @@
   "publisher": "sokra",
   "engines": {
     "vscode": "^1.22.0"
-    "vscode": "^1.20.0"
   },
   "activationEvents": [
     "onLanguage:typescript",
