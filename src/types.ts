@@ -35,6 +35,7 @@ export type FeatureType =
     | 'functionReturnType'
     | 'functionParameterType'
     | 'propertyType'
+    | 'objectPatternType'
     | 'parameterName'
     | 'highlightAny'
 

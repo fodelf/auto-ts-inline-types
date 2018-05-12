@@ -103,46 +103,67 @@ function getDecorations(
     const typeChecker = context.getTypeChecker();
     const configuration = context.configuration;
     const result: Decoration[] = [];
+    const skipTypes = new WeakSet<ts.Node>();
     aux(sourceFile);
     return result;
 
     function aux(node: ts.Node): void {
-        if (ts.isVariableDeclaration(node) && !node.type && context.configuration.features.variableType) {
-            result.push(getDecoration(sourceFile!, typeChecker, configuration, node.name))
-        } else if (ts.isPropertySignature(node) && !node.type && context.configuration.features.propertyType) {
-            result.push(getDecoration(sourceFile!, typeChecker, configuration, node.name))
-        } else if (ts.isParameter(node) && !node.type && context.configuration.features.functionParameterType) {
-            result.push(getDecoration(sourceFile!, typeChecker, configuration, node.name))
-        } else if (ts.isFunctionDeclaration(node) && !node.type && context.configuration.features.functionReturnType) {
-            const signature = typeChecker.getSignatureFromDeclaration(node);
-            result.push(getDecoration(sourceFile!, typeChecker, configuration, node, node.body, signature && signature.getReturnType()));
-        } else if (ts.isMethodDeclaration(node) && !node.type && context.configuration.features.functionReturnType) {
-            const signature = typeChecker.getSignatureFromDeclaration(node);
-            result.push(getDecoration(sourceFile!, typeChecker, configuration, node, node.body, signature && signature.getReturnType()));
-        } else if (ts.isArrowFunction(node) && !node.type && context.configuration.features.functionReturnType) {
-            const signature = typeChecker.getSignatureFromDeclaration(node);
-            result.push(getDecoration(sourceFile!, typeChecker, configuration, node, node.equalsGreaterThanToken, signature && signature.getReturnType(), true));
-        } else if ((ts.isCallExpression(node) || ts.isNewExpression(node)) && node.arguments && node.arguments.length > 0 && context.configuration.features.parameterName) {
-            const resolvedSignature = typeChecker.getResolvedSignature(node);
-            for (let i = 0; i < node.arguments.length; ++i) {
-                const argument = node.arguments[i];
-                const parameter = resolvedSignature.parameters[i];
-                if (parameter) {
-                    const parameterName = (isRestParameter(parameter) ? '...' : '') + parameter.name;
-                    if (parameterName !== argument.getText()) {
-                        result.push({
-                            textBefore: `${parameterName}: `,
-                            textAfter: '',
-                            startPosition: sourceFile!.getLineAndCharacterOfPosition(argument.pos + argument.getLeadingTriviaWidth()),
-                            endPosition: sourceFile!.getLineAndCharacterOfPosition(argument.end),
-                            isWarning: false
-                        });
+        node.forEachChild(aux);
+
+        if(skipTypes.has(node)) return;
+
+        try {
+            if (ts.isVariableDeclaration(node) && !node.type && context.configuration.features.variableType) {
+                const initialized = node.initializer && ts.isFunctionLike(node.initializer);
+                if (!initialized) {
+                    result.push(getDecoration(sourceFile!, typeChecker, configuration, node.name));
+                }
+            } else if (ts.isPropertySignature(node) && !node.type && context.configuration.features.propertyType) {
+                result.push(getDecoration(sourceFile!, typeChecker, configuration, node.name))
+            } else if (ts.isParameter(node) && !node.type && context.configuration.features.functionParameterType) {
+                result.push(getDecoration(sourceFile!, typeChecker, configuration, node.name))
+            } else if (ts.isFunctionDeclaration(node) && !node.type && context.configuration.features.functionReturnType) {
+                const signature = typeChecker.getSignatureFromDeclaration(node);
+                result.push(getDecoration(sourceFile!, typeChecker, configuration, node, node.body, signature && signature.getReturnType()));
+            } else if (ts.isMethodDeclaration(node) && !node.type && context.configuration.features.functionReturnType) {
+                const signature = typeChecker.getSignatureFromDeclaration(node);
+                result.push(getDecoration(sourceFile!, typeChecker, configuration, node, node.body, signature && signature.getReturnType()));
+            } else if (ts.isArrowFunction(node) && !node.type && context.configuration.features.functionReturnType) {
+                const signature = typeChecker.getSignatureFromDeclaration(node);
+                const returnsFunction = ts.isFunctionLike(node.body);
+                if (!returnsFunction) {
+                    result.push(getDecoration(sourceFile!, typeChecker, configuration, node, node.equalsGreaterThanToken, signature && signature.getReturnType(), true));
+                }
+            } else if (ts.isObjectBindingPattern(node) && context.configuration.features.objectPatternType) {
+                node.forEachChild(child => {
+                    if(skipTypes.has(child)) return;
+                    if (ts.isBindingElement(child)) {
+                        result.push(getDecoration(sourceFile!, typeChecker, configuration, child));
+                    }
+                });
+                if (node.parent) skipTypes.add(node.parent);
+            } else if ((ts.isCallExpression(node) || ts.isNewExpression(node)) && node.arguments && node.arguments.length > 0 && context.configuration.features.parameterName) {
+                const resolvedSignature = typeChecker.getResolvedSignature(node);
+                for (let i = 0; i < node.arguments.length; ++i) {
+                    const argument = node.arguments[i];
+                    const parameter = resolvedSignature.parameters[i];
+                    if (parameter) {
+                        const parameterName = (isRestParameter(parameter) ? '...' : '') + parameter.name;
+                        if (parameterName !== argument.getText()) {
+                            result.push({
+                                textBefore: `${parameterName}: `,
+                                textAfter: '',
+                                startPosition: sourceFile!.getLineAndCharacterOfPosition(argument.pos + argument.getLeadingTriviaWidth()),
+                                endPosition: sourceFile!.getLineAndCharacterOfPosition(argument.end),
+                                isWarning: false
+                            });
+                        }
                     }
                 }
             }
+        } catch(e) {
+            logError(e.message);
         }
-
-        node.forEachChild(aux);
     }
 }
 

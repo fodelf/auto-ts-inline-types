@@ -74,6 +74,11 @@
           "default": true,
           "description": "Render the type of properties."
         },
+        "inlineTypes.features.objectPatternType": {
+          "type": "boolean",
+          "default": true,
+          "description": "Render the type of properties in object pattern."
+        },
         "inlineTypes.features.parameterName": {
           "type": "boolean",
           "default": true,
