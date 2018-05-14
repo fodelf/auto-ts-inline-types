@@ -2,7 +2,7 @@ import * as ts from 'typescript';
 import { join as joinPath } from 'path';
 
 import { throwError, isUndefined, assertNever, curry, isRestParameter } from './utils';
-import { error as logError, info as logInfo } from './log';
+import { error as logError } from './log';
 import { TextChange, Service, FileChangeType, FileChangeTypes, Decoration, Position, Configuration } from './types';
 
 class SourceFilesCache extends Map<string, ts.SourceFile> {
@@ -250,8 +250,6 @@ function notifyFileChange(
     fileName: string,
     fileChangeType: FileChangeType
 ): void {
-    logInfo(`File ${fileChangeType.toLowerCase()}: ${fileName}`);
-
     switch (fileChangeType) {
         case FileChangeTypes.Created:
             const isNewRootFile = getParsedCommandLine(context.rootPath).fileNames.some(rootFile => rootFile === fileName);

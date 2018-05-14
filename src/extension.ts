@@ -1,6 +1,6 @@
 import * as vscode from 'vscode';
 
-import { error as logError, info as logInfo } from './log';
+import { error as logError } from './log';
 import { createService } from './service';
 import { FileChangeTypes, Decoration, TextChange, Position, Service, Configuration, Disposable } from './types';
 
@@ -74,8 +74,6 @@ function updateDecorations(
 ): void {
     const visibleTextEditors = vscode.window.visibleTextEditors.filter(isSupportedLanguage);
     for (const visibleTextEditor of visibleTextEditors) {
-        logInfo(`Updating decorations: ${visibleTextEditor.document.fileName}`);
-
         const fileName = visibleTextEditor.document.fileName;
         const decorations = service.getDecorations(normalizeFileName(fileName));
         const decorationOptions = decorations.map(d => createDecorationOptions(configuration, d));
