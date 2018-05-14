@@ -132,7 +132,7 @@ function getDecorations(
                 const signature = typeChecker.getSignatureFromDeclaration(node);
                 const returnsFunction = ts.isFunctionLike(node.body);
                 if (!returnsFunction) {
-                    result.push(getDecoration(sourceFile!, typeChecker, configuration, node, node.equalsGreaterThanToken, signature && signature.getReturnType(), true));
+                    result.push(getDecoration(sourceFile!, typeChecker, configuration, node, node.equalsGreaterThanToken, signature && signature.getReturnType(), node.parameters.length === 1));
                 }
             } else if (ts.isObjectBindingPattern(node) && context.configuration.features.objectPatternType) {
                 node.forEachChild(child => {
@@ -150,6 +150,37 @@ function getDecorations(
                     }
                 });
                 if (node.parent) skipTypes.add(node.parent);
+            } else if (ts.isObjectLiteralExpression(node) && context.configuration.features.objectLiteralType) {
+                let current = node.parent;
+                if (current && ts.isParenthesizedExpression(current))
+                    current = current.parent;
+                if (current && ts.isReturnStatement(current))
+                    current = current.parent;
+                if (current && ts.isBlock(current))
+                    current = current.parent;
+                if (current &&  ts.isFunctionLike(current)) {
+                    const signature = typeChecker.getSignatureFromDeclaration(current);
+                    if(signature) {
+                        const returnObject = signature.getReturnType();
+                        let numberOfTypes = 0;
+                        node.forEachChild(child => {
+                            if ((
+                                ts.isPropertyAssignment(child) ||
+                                ts.isShorthandPropertyAssignment(child)
+                             ) && ts.isIdentifier(child.name)) {
+                                const symbol = returnObject.getProperty(child.name.text);
+                                if (symbol && symbol.valueDeclaration) {
+                                    numberOfTypes++;
+                                    const type = typeChecker.getTypeAtLocation(symbol.valueDeclaration);
+                                    if (type) {
+                                        result.push(getDecoration(sourceFile!, typeChecker, configuration, child.name, undefined, type));
+                                    }
+                                }
+                            }
+                        });
+                        if (current && numberOfTypes > 0 && numberOfTypes === returnObject.getProperties().length) skipTypes.add(current);
+                    }
+                }
             } else if ((ts.isCallExpression(node) || ts.isNewExpression(node)) && node.arguments && node.arguments.length > 0 && context.configuration.features.parameterName) {
                 const resolvedSignature = typeChecker.getResolvedSignature(node);
                 for (let i = 0; i < node.arguments.length; ++i) {

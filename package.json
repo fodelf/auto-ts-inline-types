@@ -84,6 +84,11 @@
           "default": true,
           "description": "Render the type of items in array pattern."
         },
+        "inlineTypes.features.objectLiteralType": {
+          "type": "boolean",
+          "default": true,
+          "description": "Render the type of items in object literals."
+        },
         "inlineTypes.features.parameterName": {
           "type": "boolean",
           "default": true,
