@@ -156,8 +156,10 @@ function getDecorations(
                     current = current.parent;
                 if (current && ts.isReturnStatement(current))
                     current = current.parent;
-                if (current && ts.isBlock(current))
-                    current = current.parent;
+                while(current && (
+                    ts.isBlock(current) ||
+                    ts.isIfStatement(current)
+                )) current = current.parent;
                 if (current &&  ts.isFunctionLike(current)) {
                     const signature = typeChecker.getSignatureFromDeclaration(current);
                     if(signature) {
