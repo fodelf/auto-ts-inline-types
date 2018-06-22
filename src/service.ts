@@ -238,9 +238,15 @@ function notifyDocumentChange(
         return;
     }
 
-    const newSourceFile = textChanges.reduce(updateSourceFile, cachedSourceFile);
-    if (newSourceFile !== cachedSourceFile) {
-        context.sourceFilesCache.set(fileName, newSourceFile);
+    try {
+        const newSourceFile = textChanges.reduce(updateSourceFile, cachedSourceFile);
+        if (newSourceFile !== cachedSourceFile) {
+            context.sourceFilesCache.set(fileName, newSourceFile);
+            context.updateProgram();
+        }
+    } catch(e) {
+        logError(e.message);
+        context.sourceFilesCache.delete(fileName);
         context.updateProgram();
     }
 }
