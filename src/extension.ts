@@ -43,7 +43,7 @@ function createServiceForExtension(
         () => updateDecorations(configuration, decorationType, service));
     updateDecorations(configuration, decorationType, service);
 
-    const fileWatcher = vscode.workspace.createFileSystemWatcher('{!node_modules,**}/*.{ts,js}');
+    const fileWatcher = vscode.workspace.createFileSystemWatcher('{!node_modules,**}/*.{ts,js,tsx,jsx}');
     fileWatcher.onDidCreate(e => service.notifyFileChange(normalizeFileName(e.fsPath), FileChangeTypes.Created));
     fileWatcher.onDidChange(e => service.notifyFileChange(normalizeFileName(e.fsPath), FileChangeTypes.Changed));
     fileWatcher.onDidDelete(e => service.notifyFileChange(normalizeFileName(e.fsPath), FileChangeTypes.Deleted));
@@ -118,6 +118,8 @@ function normalizeFileName(fileName: string): string {
     return fileName.replace(/\\/g, '/');
 }
 
+const SUPPORTED_LANGUAGES = ['typescript', 'javascript', 'javascriptreact', 'typescriptreact'];
+
 function isSupportedLanguage(value: vscode.TextEditor): boolean {
-    return value.document.languageId === 'typescript' || value.document.languageId === 'javascript';
+    return SUPPORTED_LANGUAGES.includes(value.document.languageId);
 }
