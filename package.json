@@ -17,7 +17,7 @@
   "main": "./out/src/extension",
   "scripts": {
     "vscode:prepublish": "npm run clean && npm run compile",
-    "clean": "rm -rf out/ *.vsix",
+    "clean": "rimraf out/ *.vsix",
     "compile": "tsc -p ./",
     "watch": "tsc -w -p ./",
     "update-vscode": "node ./node_modules/vscode/bin/install",
@@ -34,6 +34,7 @@
     "@types/chalk": "2.2.0",
     "@types/node": "9.6.1",
     "cz-conventional-changelog": "2.1.0",
+    "rimraf": "^2.6.2",
     "standard-version": "4.3.0",
     "vsce": "1.40.0"
   },
