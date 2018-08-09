@@ -186,19 +186,21 @@ function getDecorations(
                 }
             } else if ((ts.isCallExpression(node) || ts.isNewExpression(node)) && node.arguments && node.arguments.length > 0 && context.configuration.features.parameterName) {
                 const resolvedSignature = typeChecker.getResolvedSignature(node);
-                for (let i = 0; i < node.arguments.length; ++i) {
-                    const argument = node.arguments[i];
-                    const parameter = resolvedSignature.parameters[i];
-                    if (parameter) {
-                        const parameterName = (isRestParameter(parameter) ? '...' : '') + parameter.name;
-                        if (parameterName !== argument.getText()) {
-                            result.push({
-                                textBefore: `${parameterName}: `,
-                                textAfter: '',
-                                startPosition: sourceFile!.getLineAndCharacterOfPosition(argument.pos + argument.getLeadingTriviaWidth()),
-                                endPosition: sourceFile!.getLineAndCharacterOfPosition(argument.end),
-                                isWarning: false
-                            });
+                if (resolvedSignature) {
+                    for (let i = 0; i < node.arguments.length; ++i) {
+                        const argument = node.arguments[i];
+                        const parameter = resolvedSignature.parameters[i];
+                        if (parameter) {
+                            const parameterName = (isRestParameter(parameter) ? '...' : '') + parameter.name;
+                            if (parameterName !== argument.getText()) {
+                                result.push({
+                                    textBefore: `${parameterName}: `,
+                                    textAfter: '',
+                                    startPosition: sourceFile!.getLineAndCharacterOfPosition(argument.pos + argument.getLeadingTriviaWidth()),
+                                    endPosition: sourceFile!.getLineAndCharacterOfPosition(argument.end),
+                                    isWarning: false
+                                });
+                            }
                         }
                     }
                 }

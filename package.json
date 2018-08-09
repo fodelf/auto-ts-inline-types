@@ -3,7 +3,7 @@
   "description": "A Visual Studio Code extension to render inferred types in TypeScript documents.",
   "author": "Martin Johns",
   "license": "MIT",
-  "version": "0.3.0",
+  "version": "0.4.0",
   "publisher": "sokra",
   "engines": {
     "vscode": "^1.22.0"
@@ -26,9 +26,9 @@
     "release": "standard-version"
   },
   "dependencies": {
-    "chalk": "2.3.2",
-    "typescript": "2.9.1",
-    "vscode": "1.1.17"
+    "chalk": "2.4.1",
+    "typescript": "3.0.1",
+    "vscode": "1.1.18"
   },
   "devDependencies": {
     "@types/chalk": "2.2.0",
@@ -36,7 +36,7 @@
     "cz-conventional-changelog": "2.1.0",
     "rimraf": "^2.6.2",
     "standard-version": "4.3.0",
-    "vsce": "1.40.0"
+    "vsce": "1.46.0"
   },
   "repository": {
     "type": "git",
