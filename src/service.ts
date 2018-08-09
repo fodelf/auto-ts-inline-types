@@ -1,4 +1,5 @@
 import * as ts from 'typescript';
+import * as vscode from 'vscode';
 import { join as joinPath } from 'path';
 
 import { throwError, isUndefined, assertNever, curry, isRestParameter } from './utils';
@@ -124,15 +125,15 @@ function getDecorations(
                 result.push(getDecoration(sourceFile!, typeChecker, configuration, node.name))
             } else if (ts.isFunctionDeclaration(node) && !node.type && context.configuration.features.functionReturnType) {
                 const signature = typeChecker.getSignatureFromDeclaration(node);
-                result.push(getDecoration(sourceFile!, typeChecker, configuration, node, node.body, signature && signature.getReturnType()));
+                result.push(getDecoration(sourceFile!, typeChecker, configuration, node, node.body, signature && signature.getReturnType(), false, false));
             } else if (ts.isMethodDeclaration(node) && !node.type && context.configuration.features.functionReturnType) {
                 const signature = typeChecker.getSignatureFromDeclaration(node);
-                result.push(getDecoration(sourceFile!, typeChecker, configuration, node, node.body, signature && signature.getReturnType()));
+                result.push(getDecoration(sourceFile!, typeChecker, configuration, node, node.body, signature && signature.getReturnType(), false, false));
             } else if (ts.isArrowFunction(node) && !node.type && context.configuration.features.functionReturnType) {
                 const signature = typeChecker.getSignatureFromDeclaration(node);
                 const returnsFunction = ts.isFunctionLike(node.body);
                 if (!returnsFunction) {
-                    result.push(getDecoration(sourceFile!, typeChecker, configuration, node, node.equalsGreaterThanToken, signature && signature.getReturnType(), node.parameters.length === 1));
+                    result.push(getDecoration(sourceFile!, typeChecker, configuration, node, node.equalsGreaterThanToken, signature && signature.getReturnType(), node.parameters.length === 1, false));
                 }
             } else if (ts.isObjectBindingPattern(node) && context.configuration.features.objectPatternType) {
                 node.forEachChild(child => {
@@ -208,6 +209,9 @@ function getDecorations(
     }
 }
 
+const typeNameCache = new WeakMap<ts.Type, string>();
+const longTypeNameCache = new WeakMap<ts.Type, string>();
+
 function getDecoration(
     sourceFile: ts.SourceFile,
     typeChecker: ts.TypeChecker,
@@ -215,18 +219,47 @@ function getDecoration(
     node: ts.Node,
     endNode: ts.Node | undefined = undefined,
     type: ts.Type = typeChecker.getTypeAtLocation(node),
-    wrap: boolean = false
+    wrap: boolean = false,
+    hover: boolean = true
 ): Decoration {
-    const typeName = typeChecker.typeToString(type, node.parent, ts.TypeFormatFlags.UseFullyQualifiedType);
+    let typeName = typeNameCache.get(type);
+    if (typeName === undefined) {
+        typeName = typeChecker.typeToString(
+            type,
+            node.parent,
+            ts.TypeFormatFlags.WriteArrowStyleSignature |
+            ts.TypeFormatFlags.UseAliasDefinedOutsideCurrentScope
+        );
+        typeNameCache.set(type, typeName);
+    }
+    let longTypeName = longTypeNameCache.get(type);
+    if (longTypeName === undefined) {
+        longTypeName = typeChecker.typeToString(
+            type,
+            node.parent, 
+            ts.TypeFormatFlags.UseFullyQualifiedType |
+            ts.TypeFormatFlags.NoTruncation |
+            ts.TypeFormatFlags.UseStructuralFallback |
+            ts.TypeFormatFlags.AllowUniqueESSymbolType |
+            ts.TypeFormatFlags.WriteArrowStyleSignature |
+            ts.TypeFormatFlags.WriteTypeArgumentsOfSignature
+        ).replace(/;(\s(?=\s*\}))?/g, ";\n");
+        longTypeNameCache.set(type, longTypeName);
+    }
     const leadingTriviaWidth = node.getLeadingTriviaWidth();
 
     const textBefore = wrap ? '(' : '';
     const textAfter = (wrap ? ')' : '') + ': ' + typeName;
+    let hoverMessage = undefined;
+    if (longTypeName !== typeName && hover) {
+        hoverMessage = new vscode.MarkdownString();
+        hoverMessage.appendCodeblock(longTypeName, "typescript");
+    }
     const startPosition = sourceFile.getLineAndCharacterOfPosition(node.pos + leadingTriviaWidth);
     const endPosition = sourceFile.getLineAndCharacterOfPosition(endNode ? endNode.pos : node.end);
     const isWarning = configuration.features.highlightAny && /\bany\b/.test(typeName);
 
-    return { textBefore, textAfter, startPosition, endPosition, isWarning };
+    return { textBefore, textAfter, hoverMessage, startPosition, endPosition, isWarning };
 }
 
 function notifyDocumentChange(

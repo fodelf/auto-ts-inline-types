@@ -1,3 +1,5 @@
+import * as vscode from "vscode";
+
 export interface Position {
     readonly line: number;
     readonly character: number;
@@ -6,6 +8,7 @@ export interface Position {
 export interface Decoration {
     readonly textBefore: string;
     readonly textAfter: string;
+    readonly hoverMessage?: vscode.MarkdownString | vscode.MarkdownString[];
     readonly startPosition: Position;
     readonly endPosition: Position;
     readonly isWarning: boolean;

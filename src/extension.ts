@@ -76,30 +76,52 @@ function updateDecorations(
     for (const visibleTextEditor of visibleTextEditors) {
         const fileName = visibleTextEditor.document.fileName;
         const decorations = service.getDecorations(normalizeFileName(fileName));
-        const decorationOptions = decorations.map(d => createDecorationOptions(configuration, d));
+        const decorationOptions = decorations.reduce<vscode.DecorationOptions[]>((arr, d) => arr.concat(createDecorationOptions(configuration, d)), []);
         visibleTextEditor.setDecorations(decorationType, decorationOptions);
     }
 }
 
-function createDecorationOptions(configuration: Configuration, decoration: Decoration): vscode.DecorationOptions {
+function createDecorationOptions(configuration: Configuration, decoration: Decoration): vscode.DecorationOptions[] {
     const textDecoration = `none; ${decoration.isWarning ? configuration.highlightStyle : configuration.decorationStyle}`;
     const startPosition = mapServicePosition(decoration.startPosition);
     const endPosition = mapServicePosition(decoration.endPosition);
+    const nextEndPosition = mapServicePosition(decoration.endPosition, 1);
     const lightThemeColor = decoration.isWarning ? configuration.highlightColor : "black";
     const darkThemeColor = decoration.isWarning ? configuration.highlightColor : "white";
-    return {
-        range: new vscode.Range(startPosition, endPosition),
-        renderOptions: {
-            light: {
-                before: { contentText: decoration.textBefore, textDecoration, color: lightThemeColor },
-                after: { contentText: decoration.textAfter, textDecoration, color: lightThemeColor }
-            },
-            dark: {
-                before: { contentText: decoration.textBefore, textDecoration, color: darkThemeColor },
-                after: { contentText: decoration.textAfter, textDecoration, color: darkThemeColor }
+    const decos: vscode.DecorationOptions[] = [];
+    if (decoration.hoverMessage) {
+        decos.push({
+            range: new vscode.Range(startPosition, endPosition),
+            hoverMessage: decoration.hoverMessage
+        });
+    }
+    if (decoration.textBefore) {
+        decos.push({
+            range: new vscode.Range(startPosition, endPosition),
+            renderOptions: {
+                light: {
+                    before: { contentText: decoration.textBefore, textDecoration, color: lightThemeColor },
+                },
+                dark: {
+                    before: { contentText: decoration.textBefore, textDecoration, color: darkThemeColor },
+                }
             }
-        }
-    };
+        });
+    }
+    if (decoration.textAfter) {
+        decos.push({
+            range: new vscode.Range(endPosition, nextEndPosition),
+            renderOptions: {
+                light: {
+                    before: { contentText: decoration.textAfter, textDecoration, color: lightThemeColor },
+                },
+                dark: {
+                    before: { contentText: decoration.textAfter, textDecoration, color: darkThemeColor },
+                }
+            }
+        });
+    }
+    return decos;
 }
 
 function mapContentChange(contentChange: vscode.TextDocumentContentChangeEvent): TextChange {
@@ -110,8 +132,8 @@ function mapContentChange(contentChange: vscode.TextDocumentContentChangeEvent):
     };
 }
 
-function mapServicePosition(position: Position): vscode.Position {
-    return new vscode.Position(position.line, position.character);
+function mapServicePosition(position: Position, offset: number = 0): vscode.Position {
+    return new vscode.Position(position.line, position.character + offset);
 }
 
 function normalizeFileName(fileName: string): string {
