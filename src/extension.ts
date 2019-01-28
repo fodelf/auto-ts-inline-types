@@ -40,8 +40,8 @@ function createServiceForExtension(
     const service = createService(
         rootPath,
         configuration,
-        () => updateDecorations(configuration, decorationType, service));
-    updateDecorations(configuration, decorationType, service);
+        () => updateDecorations(decorationType, service, configuration));
+    updateDecorations(decorationType, service, configuration);
 
     const fileWatcher = vscode.workspace.createFileSystemWatcher('{!node_modules,**}/*.{ts,js,tsx,jsx}');
     fileWatcher.onDidCreate(e => service.notifyFileChange(normalizeFileName(e.fsPath), FileChangeTypes.Created));
@@ -49,7 +49,7 @@ function createServiceForExtension(
     fileWatcher.onDidDelete(e => service.notifyFileChange(normalizeFileName(e.fsPath), FileChangeTypes.Deleted));
     subscriptions.push(fileWatcher);
 
-    vscode.window.onDidChangeActiveTextEditor(() => updateDecorations(configuration, decorationType, service));
+    vscode.window.onDidChangeActiveTextEditor(() => updateDecorations(decorationType, service, configuration));
     vscode.workspace.onDidChangeTextDocument(e => service.notifyDocumentChange(
         normalizeFileName(e.document.fileName),
         e.contentChanges.map(mapContentChange)));
@@ -61,33 +61,37 @@ function mapConfiguration(configuration: vscode.WorkspaceConfiguration): Configu
     return {
         features: configuration.features,
         updateDelay: configuration.updateDelay,
-        decorationStyle: configuration.decorationStyle,
-        highlightStyle: configuration.highlightStyle,
-        highlightColor: configuration.highlightColor,
+        lightThemeDecorationStyle: configuration.lightThemeDecorationStyle,
+        darkThemeDecorationStyle: configuration.darkThemeDecorationStyle
     };
 }
 
 function updateDecorations(
-    configuration: Configuration,
     decorationType: vscode.TextEditorDecorationType,
-    service: Service
+    service: Service,
+    configuration: Configuration
 ): void {
     const visibleTextEditors = vscode.window.visibleTextEditors.filter(isSupportedLanguage);
     for (const visibleTextEditor of visibleTextEditors) {
         const fileName = visibleTextEditor.document.fileName;
         const decorations = service.getDecorations(normalizeFileName(fileName));
-        const decorationOptions = decorations.reduce<vscode.DecorationOptions[]>((arr, d) => arr.concat(createDecorationOptions(configuration, d)), []);
+        const decorationOptions = decorations.reduce<vscode.DecorationOptions[]>((arr, d) => arr.concat(createDecorationOptions(d, configuration)), []);
         visibleTextEditor.setDecorations(decorationType, decorationOptions);
     }
 }
 
-function createDecorationOptions(configuration: Configuration, decoration: Decoration): vscode.DecorationOptions[] {
-    const textDecoration = `none; ${decoration.isWarning ? configuration.highlightStyle : configuration.decorationStyle}`;
+function createDecorationOptions(decoration: Decoration, configuration: Configuration): vscode.DecorationOptions[] {
+    const lightThemeTextDecoration = decoration.isWarning ? undefined : `none; opacity: ${configuration.lightThemeDecorationStyle.opacity}`;
+    const darkThemeTextDecoration = decoration.isWarning ? undefined : `none; opacity: ${configuration.darkThemeDecorationStyle.opacity}`;
+    const lightThemeColor = decoration.isWarning === true
+        ? configuration.lightThemeDecorationStyle.warnColor
+        : configuration.lightThemeDecorationStyle.color;
+    const darkThemeColor = decoration.isWarning === true
+        ? configuration.darkThemeDecorationStyle.warnColor
+        : configuration.darkThemeDecorationStyle.color;
     const startPosition = mapServicePosition(decoration.startPosition);
     const endPosition = mapServicePosition(decoration.endPosition);
     const nextEndPosition = mapServicePosition(decoration.endPosition, 1);
-    const lightThemeColor = decoration.isWarning ? configuration.highlightColor : "black";
-    const darkThemeColor = decoration.isWarning ? configuration.highlightColor : "white";
     const decos: vscode.DecorationOptions[] = [];
     if (decoration.hoverMessage) {
         decos.push({
@@ -100,10 +104,10 @@ function createDecorationOptions(configuration: Configuration, decoration: Decor
             range: new vscode.Range(startPosition, endPosition),
             renderOptions: {
                 light: {
-                    before: { contentText: decoration.textBefore, textDecoration, color: lightThemeColor },
+                    before: { contentText: decoration.textBefore, textDecoration: lightThemeTextDecoration, color: lightThemeColor },
                 },
                 dark: {
-                    before: { contentText: decoration.textBefore, textDecoration, color: darkThemeColor },
+                    before: { contentText: decoration.textBefore, textDecoration: darkThemeTextDecoration, color: darkThemeColor },
                 }
             }
         });
@@ -113,10 +117,10 @@ function createDecorationOptions(configuration: Configuration, decoration: Decor
             range: new vscode.Range(endPosition, nextEndPosition),
             renderOptions: {
                 light: {
-                    before: { contentText: decoration.textAfter, textDecoration, color: lightThemeColor },
+                    before: { contentText: decoration.textAfter, textDecoration: lightThemeTextDecoration, color: lightThemeColor },
                 },
                 dark: {
-                    before: { contentText: decoration.textAfter, textDecoration, color: darkThemeColor },
+                    before: { contentText: decoration.textAfter, textDecoration: darkThemeTextDecoration, color: darkThemeColor },
                 }
             }
         });

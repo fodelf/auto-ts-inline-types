@@ -35,6 +35,7 @@ export interface Service {
 
 export type FeatureType =
     | 'variableType'
+    | 'functionVariableType'
     | 'functionReturnType'
     | 'functionParameterType'
     | 'propertyType'
@@ -47,9 +48,14 @@ export type FeatureType =
 export interface Configuration {
     readonly features: { readonly [P in FeatureType]: boolean };
     readonly updateDelay: number;
-    readonly decorationStyle: string;
-    readonly highlightStyle: string;
-    readonly highlightColor: string;
+    readonly lightThemeDecorationStyle: DecorationStyle;
+    readonly darkThemeDecorationStyle: DecorationStyle;
+}
+
+export interface DecorationStyle {
+    readonly opacity: number;
+    readonly color: string;
+    readonly warnColor: string;
 }
 
 export interface Disposable {

@@ -60,7 +60,12 @@
         "inlineTypes.features.variableType": {
           "type": "boolean",
           "default": true,
-          "description": "Render the type of variables."
+          "description": "Render the type of variables (unless they're functions)."
+        },
+        "inlineTypes.features.functionVariableType": {
+          "type": "boolean",
+          "default": false,
+          "description": "Render the type of variables even when they're functions."
         },
         "inlineTypes.features.functionReturnType": {
           "type": "boolean",
@@ -108,20 +113,35 @@
           "minimum": 0,
           "description": "A delay for propagating decoration updates to the editor in milliseconds."
         },
-        "inlineTypes.decorationStyle": {
-          "type": "string",
-          "default": "opacity: 0.5",
-          "description": "CSS styles for decorations."
+        "inlineTypes.lightThemeDecorationStyle.opacity": {
+          "type": "number",
+          "description": "Opacity used for the decoration in light theme.",
+          "default": 0.5
         },
-        "inlineTypes.highlightStyle": {
+        "inlineTypes.lightThemeDecorationStyle.color": {
           "type": "string",
-          "default": "",
-          "description": "CSS styles for warnings."
+          "description": "The color used for the decoration in light theme.",
+          "default": "black"
         },
-        "inlineTypes.highlightColor": {
+        "inlineTypes.lightThemeDecorationStyle.warnColor": {
           "type": "string",
-          "default": "#FF2400",
-          "description": "Color for warnings."
+          "description": "The color used for warning decorations in light theme.",
+          "default": "#FF2400"
+        },
+        "inlineTypes.darkThemeDecorationStyle.opacity": {
+          "type": "number",
+          "description": "Opacity used for the decoration in dark theme.",
+          "default": 0.5
+        },
+        "inlineTypes.darkThemeDecorationStyle.color": {
+          "type": "string",
+          "description": "The color used for the decoration in dark theme.",
+          "default": "white"
+        },
+        "inlineTypes.darkThemeDecorationStyle.warnColor": {
+          "type": "string",
+          "description": "The color used for warning decorations in dark theme.",
+          "default": "#FF2400"
         }
       }
     }

@@ -114,9 +114,12 @@ function getDecorations(
         if(skipTypes.has(node)) return;
 
         try {
-            if (ts.isVariableDeclaration(node) && !node.type && context.configuration.features.variableType) {
-                const initialized = node.initializer && ts.isFunctionLike(node.initializer);
-                if (!initialized) {
+            if (ts.isVariableDeclaration(node) && !node.type) {
+                const isFunction = node.initializer && ts.isFunctionLike(node.initializer);
+                const shouldAddDecoration = isFunction
+                    ? context.configuration.features.functionVariableType
+                    : context.configuration.features.variableType;
+                if (shouldAddDecoration) {
                     result.push(getDecoration(sourceFile!, typeChecker, configuration, node.name));
                 }
             } else if (ts.isPropertySignature(node) && !node.type && context.configuration.features.propertyType) {
