@@ -27,8 +27,7 @@
   },
   "dependencies": {
     "chalk": "^2.4.2",
-    "typescript": "^3.3.1",
-    "vscode": "^1.1.28"
+    "typescript": "^3.3.1"
   },
   "devDependencies": {
     "@types/chalk": "^2.2.0",
@@ -36,7 +35,8 @@
     "cz-conventional-changelog": "^2.1.0",
     "rimraf": "^2.6.3",
     "standard-version": "^4.4.0",
-    "vsce": "^1.55.0"
+    "vsce": "^1.55.0",
+    "vscode": "^1.1.28"
   },
   "repository": {
     "type": "git",
