@@ -3,7 +3,7 @@
   "description": "A Visual Studio Code extension to render inferred types in TypeScript documents.",
   "author": "Martin Johns",
   "license": "MIT",
-  "version": "0.4.0",
+  "version": "0.5.0",
   "publisher": "sokra",
   "engines": {
     "vscode": "^1.22.0"
@@ -16,41 +16,27 @@
   ],
   "main": "./out/src/extension",
   "scripts": {
-    "vscode:prepublish": "npm run clean && npm run compile",
+    "vscode:prepublish": "yarn clean && yarn compile",
     "clean": "rimraf out/ *.vsix",
     "compile": "tsc -p ./",
     "watch": "tsc -w -p ./",
     "update-vscode": "node ./node_modules/vscode/bin/install",
     "postinstall": "node ./node_modules/vscode/bin/install",
-    "prerelease": "vsce package",
-    "release": "standard-version"
+    "prerelease": "vsce package --yarn"
   },
   "dependencies": {
     "chalk": "^2.4.2",
-    "typescript": "^3.3.1"
+    "typescript": "^3.5.3"
   },
   "devDependencies": {
-    "@types/chalk": "^2.2.0",
-    "@types/node": "^11.9.3",
-    "cz-conventional-changelog": "^2.1.0",
+    "@types/node": "^12.6.2",
     "rimraf": "^2.6.3",
-    "standard-version": "^4.4.0",
-    "vsce": "^1.55.0",
-    "vscode": "^1.1.28"
+    "vsce": "^1.65.0",
+    "vscode": "^1.1.35"
   },
   "repository": {
     "type": "git",
     "url": "https://github.com/sokra/vscode-inline-types"
-  },
-  "config": {
-    "commitizen": {
-      "path": "./node_modules/cz-conventional-changelog"
-    }
-  },
-  "standard-version": {
-    "scripts": {
-      "postbump": "vsce package"
-    }
   },
   "contributes": {
     "configuration": {
