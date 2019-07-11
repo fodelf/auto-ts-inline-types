@@ -1,7 +1,7 @@
 {
-  "name": "sokra-inline-types",
-  "description": "A Visual Studio Code extension to render inferred types in TypeScript documents.",
-  "author": "Martin Johns",
+  "name": "ts-inline-types",
+  "description": "A Visual Studio Code extension to render inferred types in TypeScript/Javascript documents.",
+  "author": "Martin Johns and Tobias Koppers",
   "license": "MIT",
   "version": "0.5.0",
   "publisher": "sokra",
