@@ -9,7 +9,7 @@ A Visual Studio Code extension that will inline-render inferred types in TypeScr
 Inside VSCode, press `Ctrl+P`, and enter:
 
 ```
-ext install inline-types
+ext install ts-inline-types
 ```
 
-[[Source](https://marketplace.visualstudio.com/items?itemName=MartinJohns.inline-types)]
+[[Source](https://marketplace.visualstudio.com/items?itemName=sokra.ts-inline-types)]
