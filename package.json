@@ -6,7 +6,7 @@
   "version": "1.0.0",
   "publisher": "sokra",
   "engines": {
-    "vscode": "^1.22.0"
+    "vscode": "^1.39.0"
   },
   "activationEvents": [
     "onLanguage:typescript",
@@ -25,14 +25,14 @@
     "prerelease": "vsce package --yarn"
   },
   "dependencies": {
-    "chalk": "^2.4.2",
-    "typescript": "^3.5.3"
+    "chalk": "^3.0.0",
+    "typescript": "^3.7.2"
   },
   "devDependencies": {
-    "@types/node": "^12.6.2",
-    "rimraf": "^2.6.3",
-    "vsce": "^1.65.0",
-    "vscode": "^1.1.35"
+    "@types/node": "^12.12.11",
+    "rimraf": "^3.0.0",
+    "vsce": "^1.69.0",
+    "vscode": "^1.1.36"
   },
   "repository": {
     "type": "git",
