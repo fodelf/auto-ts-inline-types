@@ -1,10 +1,10 @@
 {
-  "name": "ts-inline-types",
+  "name": "auto-ts-inline-types",
   "description": "A Visual Studio Code extension to render inferred types in TypeScript/Javascript documents.",
-  "author": "Martin Johns and Tobias Koppers",
+  "author": "Martin Johns and Tobias Koppers and sokra",
   "license": "MIT",
-  "version": "1.1.0",
-  "publisher": "sokra",
+  "version": "1.0.1",
+  "publisher": "wuwenzhou",
   "engines": {
     "vscode": "^1.39.0"
   },
@@ -36,9 +36,32 @@
   },
   "repository": {
     "type": "git",
-    "url": "https://github.com/sokra/vscode-inline-types"
+    "url": "https://github.com/fodelf/auto-ts-inline-types"
   },
   "contributes": {
+      "commands": [
+        {
+            "command": "extension.autoTsType",
+            "title": "autoTsType"
+        }
+    ],
+    "keybindings": [
+        {
+            "command": "extension.autoTsType",
+            "key": "ctrl+f10",
+            "mac": "cmd+f10",
+            "when": "editorTextFocus"
+        }
+    ],
+    "menus": {
+        "editor/context": [
+            {
+                "when": "editorFocus",
+                "command": "extension.autoTsType",
+                "group": "navigation"
+            }
+        ]
+    },
     "configuration": {
       "type": "object",
       "title": "inline-types extension configuration",

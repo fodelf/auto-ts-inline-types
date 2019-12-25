@@ -30,7 +30,7 @@ export const FileChangeTypes: { readonly [P in FileChangeType]: P } = {
 export interface Service {
     notifyDocumentChange(fileName: string, textChanges: ReadonlyArray<TextChange>): void;
     notifyFileChange(fileName: string, fileChangeType: FileChangeType): void;
-    getDecorations(fileName: string): ReadonlyArray<Decoration>;
+    getDecorations(fileName: string,isRefresh?:boolean): ReadonlyArray<Decoration>;
 }
 
 export type FeatureType =

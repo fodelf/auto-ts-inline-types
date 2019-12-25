@@ -25,13 +25,17 @@ interface ServiceContext {
 
 export function createService(
     rootPath: string,
-    configuration: Configuration,
-    onUpdate: () => void
+    configuration: Configuration
+    // onUpdate?: () => void
 ): Service {
     const context = createServiceContext(
+        // rootPath,
+        // configuration,
+        // getDelayedOnUpdate(configuration.updateDelay, onUpdate));
         rootPath,
         configuration,
-        getDelayedOnUpdate(configuration.updateDelay, onUpdate));
+        ()=>{}
+       );
 
     return {
         getDecorations: curry(getDecorations, context),
@@ -40,18 +44,18 @@ export function createService(
     };
 }
 
-function getDelayedOnUpdate(delay: number, onUpdate: () => void): () => void {
-    if (delay === 0) { return onUpdate; }
+// function getDelayedOnUpdate(delay: number, onUpdate: () => void): () => void {
+//     if (delay === 0) { return onUpdate; }
 
-    let updateTimeout: NodeJS.Timer | undefined = undefined;
-    return () => {
-        if (updateTimeout !== undefined) {
-            clearTimeout(updateTimeout);
-        }
+//     let updateTimeout: NodeJS.Timer | undefined = undefined;
+//     return () => {
+//         if (updateTimeout !== undefined) {
+//             clearTimeout(updateTimeout);
+//         }
 
-        updateTimeout = setTimeout(onUpdate, delay);
-    };
-}
+//         // updateTimeout = setTimeout(onUpdate, delay);
+//     };
+// }
 
 function createServiceContext(
     rootPath: string,
@@ -75,6 +79,7 @@ function createServiceContext(
 
 function createProgram(rootPath: string, sourceFilesCache: SourceFilesCache, oldProgram?: ts.Program): ts.Program {
     const { fileNames, options } = getParsedCommandLine(rootPath);
+    console.log("----------------------------------")
     const compilerHost = createCompilerHost(options, sourceFilesCache);
     const program = ts.createProgram(fileNames, options, compilerHost, oldProgram);
     return program;
@@ -93,9 +98,14 @@ function updateProgram(
 
 function getDecorations(
     context: ServiceContext,
-    fileName: string
+    fileName: string,
+    isRefresh?:boolean
 ): ReadonlyArray<Decoration> {
+  if(isRefresh){
+    updateCachedSourceFileBack(context,fileName)
+  }
     const sourceFile = context.sourceFilesCache.get(fileName);
+    // const sourceFile = context.sourceFile.getFullText();
     if (!sourceFile) {
         logError(`Failed to find source file '${fileName}' in cache.`);
         return [];
@@ -262,9 +272,11 @@ function getDecoration(
     }
     const startPosition = sourceFile.getLineAndCharacterOfPosition(node.pos + leadingTriviaWidth);
     const endPosition = sourceFile.getLineAndCharacterOfPosition(endNode ? endNode.pos : node.end);
+    // console.log(node)
     const isWarning = configuration.features.highlightAny && /\bany\b/.test(typeName);
+    // const name = node['name']['escapedText']
 
-    return { textBefore, textAfter, hoverMessage, startPosition, endPosition, isWarning };
+    return { textBefore, textAfter, hoverMessage, startPosition, endPosition, isWarning,};
 }
 
 function notifyDocumentChange(
@@ -313,8 +325,10 @@ function notifyFileChange(
             break;
 
         case FileChangeTypes.Changed:
+          console.log("???????????????????")
             const isSourceFile = context.getRootFileNames().some(rootFile => rootFile === fileName);
             if (isSourceFile) {
+              console.log("isSourceFile")
                 updateCachedSourceFile(context, fileName);
             }
             break;
@@ -322,6 +336,33 @@ function notifyFileChange(
         default:
             throw assertNever(fileChangeType);
     }
+}
+function updateCachedSourceFileBack(
+  context: ServiceContext,
+  fileName: string
+): void {
+  const cachedSourceFile = context.sourceFilesCache.get(fileName);
+  if (!cachedSourceFile) {
+      return context.updateProgram();
+  }
+
+  const fileContent = ts.sys.readFile(fileName, context.getProgram().getCompilerOptions().charset);
+  if (fileContent === undefined) {
+      logError(`Failed to read file content for '${fileName}'.`);
+      return;
+  }
+  console.log("fileContent="+fileContent)
+  console.log("cachedSourceFile="+cachedSourceFile.text)
+  if (fileContent === cachedSourceFile.text) {
+      return;
+  }
+
+  const newSourceFile = cachedSourceFile.update(fileContent, {
+      newLength: fileContent.length,
+      span: { start: 0, length: cachedSourceFile.text.length }
+  });
+  context.sourceFilesCache.set(fileName, newSourceFile);
+  return context.updateProgram();
 }
 
 function updateCachedSourceFile(
@@ -338,7 +379,8 @@ function updateCachedSourceFile(
         logError(`Failed to read file content for '${fileName}'.`);
         return;
     }
-
+    console.log("fileContent="+fileContent)
+    console.log("cachedSourceFile="+cachedSourceFile.text)
     if (fileContent === cachedSourceFile.text) {
         return;
     }
