@@ -110,17 +110,13 @@ async function updateDecorations(
             // );
             // decorations = service.getDecorations(normalizeFileName(fileName));
           }
-          if(decoration.textAfter && decoration.textBefore){
+          if(decoration.textAfter&& decoration.textBefore){
             let startPosition = mapServicePosition(decoration.startPosition);
             let endPosition = mapServicePosition(decoration.endPosition);
-            let nextEndPosition = mapServicePosition(decoration.endPosition, 1);
-            let staRange = new vscode.Range(startPosition,endPosition)
-            let strgin = visibleTextEditor.document.getText(staRange)
-            let ststring = decoration.textAfter + strgin
-            await visibleTextEditor.insertSnippet(new vscode.SnippetString(ststring),staRange)
-            let range = new vscode.Range(endPosition,nextEndPosition)
+            // let nextEndPosition = mapServicePosition(decoration.endPosition, 1);
+            let range = new vscode.Range(startPosition,endPosition)
             let orgin = visibleTextEditor.document.getText(range)
-            let string = decoration.textAfter + orgin
+            let string = decoration.textBefore + orgin + decoration.textAfter
             await visibleTextEditor.insertSnippet(new vscode.SnippetString(string),range)
           }
           if(decoration.textBefore){

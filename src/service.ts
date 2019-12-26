@@ -116,48 +116,58 @@ function getDecorations(
     const skipTypes = new WeakSet<ts.Node>();
     aux(sourceFile);
     var temp:any = [];
-//			var child = [];
+//      var child = [];
       var store:any = {};
       var arr = result;
-			for(var i = 0; i < arr.length; i++) {
-				var item = arr[i];
-				if(store.hasOwnProperty(item.startPosition.line)){
-					
-				}else{
-					store[item.startPosition.line] = []
-				}
-				var child = store[item.startPosition.line]
-				var before = child[child.length - 1];
-				if(!before) {
-					child.push(arr[i])
-				} else {
-					// 判断是否在同一行
-//					if(item.startPosition.line === before.startPosition.line) {
-						if(before.textAfter&&item.textAfter) {
-							//判断位置是否覆盖
-							var wordWidth = before.textAfter.length
-							var beforeStartPosition = before.endPosition.character + wordWidth
-							if(beforeStartPosition > item.endPosition.character) {
-								item.endPosition.character = item.endPosition.character + wordWidth
-							} else {
+      for(var i = 0; i < arr.length; i++) {
+        var item = arr[i];
+        if(store.hasOwnProperty(item.startPosition.line)){
 
-							}
-						}
+        }else{
+          store[item.startPosition.line] = []
+        }
+        var child = store[item.startPosition.line]
+        var before = child[child.length - 1];
+        if(!before) {
+          child.push(arr[i])
+        } else {
+          // 判断是否在同一行
+//          if(item.startPosition.line === before.startPosition.line) {
+            if(before.textAfter&&item.textAfter) {
+              //判断位置是否覆盖
+              var wordWidth = before.textAfter.length
+              var beforeStartPosition = before.endPosition.character + wordWidth
+              if(beforeStartPosition > item.startPosition.character) {
+                var sum = 0
+                for(let m = 0;m<child.length;m++){
+                   let item = child[m];
+                   if(item.textAfter){
+                    sum = item.textAfter.length + sum;
+                    if(item.textBefore){
+                      sum = item.textBefore.length + sum;
+                    }
+                  }
+                }
+                item.endPosition.character = item.endPosition.character + sum
+              } else {
 
-						child.push(arr[i])
+              }
+            }
+
+            child.push(arr[i])
       }
     }
-			var keyArray = Object.keys(store)
-			function compare(a:any,b:any){
-			    return a-b;
-			};
-			keyArray.sort(compare);
-			keyArray.forEach((item)=>{
-				temp.push(store[item])
+      var keyArray = Object.keys(store)
+      function compare(a:any,b:any){
+          return a-b;
+      };
+      keyArray.sort(compare);
+      keyArray.forEach((item)=>{
+        temp.push(store[item])
       })
       // result = temp
     return temp.flat();
-
+    // return result;
     function aux(node: ts.Node): void {
         node.forEachChild(aux);
 
@@ -165,6 +175,7 @@ function getDecorations(
 
         try {
             if (ts.isVariableDeclaration(node) && !node.type) {
+              // var d = node.body.parent.getText();
                 const isFunction = node.initializer && ts.isFunctionLike(node.initializer);
                 const shouldAddDecoration = isFunction
                     ? context.configuration.features.functionVariableType
@@ -173,11 +184,12 @@ function getDecorations(
                     result.push(getDecoration(sourceFile!, typeChecker, configuration, node.name));
                 }
             } else if (ts.isPropertySignature(node) && !node.type && context.configuration.features.propertyType) {
-                result.push(getDecoration(sourceFile!, typeChecker, configuration, node.name))
+                 result.push(getDecoration(sourceFile!, typeChecker, configuration, node.name))
             } else if (ts.isParameter(node) && !node.type && context.configuration.features.functionParameterType) {
                 result.push(getDecoration(sourceFile!, typeChecker, configuration, node.name))
             } else if (ts.isFunctionDeclaration(node) && !node.type && context.configuration.features.functionReturnType) {
                 const signature = typeChecker.getSignatureFromDeclaration(node);
+                // var c = node.parent.getText();
                 result.push(getDecoration(sourceFile!, typeChecker, configuration, node, node.body, signature && signature.getReturnType(), false, false));
             } else if (ts.isMethodDeclaration(node) && !node.type && context.configuration.features.functionReturnType) {
                 const signature = typeChecker.getSignatureFromDeclaration(node);
@@ -186,7 +198,12 @@ function getDecorations(
                 const signature = typeChecker.getSignatureFromDeclaration(node);
                 const returnsFunction = ts.isFunctionLike(node.body);
                 if (!returnsFunction) {
-                    result.push(getDecoration(sourceFile!, typeChecker, configuration, node, node.equalsGreaterThanToken, signature && signature.getReturnType(), node.parameters.length === 1, false));
+                      // var s = node.equalsGreaterThanToken.getFullText()
+                      // var b = node.body.getFullText()
+                      // var c = node.parent.getText();
+                      var d = node.body.parent.getText();
+                    // result.push(getDecoration(sourceFile!, typeChecker, configuration, node, node.equalsGreaterThanToken, signature && signature.getReturnType(), node.parameters.length === 1, false));
+                      result.push(getDecoration(sourceFile!, typeChecker, configuration, node, node.equalsGreaterThanToken, signature && signature.getReturnType(), !d.startsWith("("),false));
                 }
             } else if (ts.isObjectBindingPattern(node) && context.configuration.features.objectPatternType) {
                 node.forEachChild(child => {
@@ -266,7 +283,60 @@ function getDecorations(
 
 const typeNameCache = new WeakMap<ts.Type, string>();
 const longTypeNameCache = new WeakMap<ts.Type, string>();
+// function getDecorationBack(
+//   sourceFile: ts.SourceFile,
+//   typeChecker: ts.TypeChecker,
+//   configuration: Configuration,
+//   node: ts.Node,
+//   endNode: ts.Node | undefined = undefined,
+//   type: ts.Type = typeChecker.getTypeAtLocation(node),
+//   wrap: boolean = false,
+//   hover: boolean = true
+// ):Decoration{
+//   let typeName = typeNameCache.get(type);
+//   if (typeName === undefined) {
+//       typeName = typeChecker.typeToString(
+//           type,
+//           node.parent,
+//           ts.TypeFormatFlags.WriteArrowStyleSignature |
+//           ts.TypeFormatFlags.UseAliasDefinedOutsideCurrentScope
+//       );
+//       typeNameCache.set(type, typeName);
+//   }
+//   let longTypeName = longTypeNameCache.get(type);
+//   if (longTypeName === undefined) {
+//       longTypeName = typeChecker.typeToString(
+//           type,
+//           node.parent,
+//           ts.TypeFormatFlags.UseFullyQualifiedType |
+//           ts.TypeFormatFlags.NoTruncation |
+//           ts.TypeFormatFlags.UseStructuralFallback |
+//           ts.TypeFormatFlags.AllowUniqueESSymbolType |
+//           ts.TypeFormatFlags.WriteArrowStyleSignature |
+//           ts.TypeFormatFlags.WriteTypeArgumentsOfSignature
+//       ).replace(/;(\s(?=\s*\}))?/g, ";\n");
+//       longTypeNameCache.set(type, longTypeName);
+//   }
+//   const leadingTriviaWidth = node.getLeadingTriviaWidth();
+//   const textBefore = wrap ? '(' : '';
+//   const textAfter = (wrap ? ')' : '') + ': ' + typeName;
+//   let hoverMessage = undefined;
+//   if (longTypeName !== typeName && hover) {
+//       hoverMessage = new vscode.MarkdownString();
+//       hoverMessage.appendCodeblock(longTypeName, "typescript");
+//   }
+//   //  var s = node.equalsGreaterThanToken.getFullText()
+//   // var b = node.body.getFullText()
+//   // var c = node.parent.getText();
+//   // var d = node.body.parent.getText();
+//   const startPosition = sourceFile.getLineAndCharacterOfPosition(node.pos + leadingTriviaWidth);
+//   const endPosition = sourceFile.getLineAndCharacterOfPosition(endNode ? endNode.pos : node.end);
+//   // console.log(node)
+//   const isWarning = configuration.features.highlightAny && /\bany\b/.test(typeName);
+//   // const name = node['name']['escapedText']
 
+//   return { textBefore, textAfter, hoverMessage, startPosition, endPosition, isWarning};
+// }
 function getDecoration(
     sourceFile: ts.SourceFile,
     typeChecker: ts.TypeChecker,
@@ -291,7 +361,7 @@ function getDecoration(
     if (longTypeName === undefined) {
         longTypeName = typeChecker.typeToString(
             type,
-            node.parent, 
+            node.parent,
             ts.TypeFormatFlags.UseFullyQualifiedType |
             ts.TypeFormatFlags.NoTruncation |
             ts.TypeFormatFlags.UseStructuralFallback |
@@ -302,7 +372,6 @@ function getDecoration(
         longTypeNameCache.set(type, longTypeName);
     }
     const leadingTriviaWidth = node.getLeadingTriviaWidth();
-
     const textBefore = wrap ? '(' : '';
     const textAfter = (wrap ? ')' : '') + ': ' + typeName;
     let hoverMessage = undefined;
@@ -310,13 +379,17 @@ function getDecoration(
         hoverMessage = new vscode.MarkdownString();
         hoverMessage.appendCodeblock(longTypeName, "typescript");
     }
+    //  var s = node.equalsGreaterThanToken.getFullText()
+    // var b = node.body.getFullText()
+    // var c = node.parent.getText();
+    // var d = node.body.parent.getText();
     const startPosition = sourceFile.getLineAndCharacterOfPosition(node.pos + leadingTriviaWidth);
     const endPosition = sourceFile.getLineAndCharacterOfPosition(endNode ? endNode.pos : node.end);
     // console.log(node)
     const isWarning = configuration.features.highlightAny && /\bany\b/.test(typeName);
     // const name = node['name']['escapedText']
 
-    return { textBefore, textAfter, hoverMessage, startPosition, endPosition, isWarning,};
+    return { textBefore, textAfter, hoverMessage, startPosition, endPosition, isWarning};
 }
 
 function notifyDocumentChange(
@@ -355,7 +428,7 @@ function notifyFileChange(
                 context.updateProgram();
             }
             break;
-        
+
         case FileChangeTypes.Deleted:
             const wasSourceFile = context.getRootFileNames().some(rootFile => rootFile === fileName);
             if (wasSourceFile) {
