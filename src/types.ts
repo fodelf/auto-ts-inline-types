@@ -2,7 +2,7 @@ import * as vscode from "vscode";
 
 export interface Position {
     readonly line: number;
-    readonly character: number;
+    character: number;
 }
 
 export interface Decoration {
@@ -10,7 +10,7 @@ export interface Decoration {
     readonly textAfter: string;
     readonly hoverMessage?: vscode.MarkdownString | vscode.MarkdownString[];
     readonly startPosition: Position;
-    readonly endPosition: Position;
+    endPosition: Position;
     readonly isWarning: boolean;
 }
 

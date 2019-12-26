@@ -79,7 +79,7 @@ function createServiceContext(
 
 function createProgram(rootPath: string, sourceFilesCache: SourceFilesCache, oldProgram?: ts.Program): ts.Program {
     const { fileNames, options } = getParsedCommandLine(rootPath);
-    console.log("----------------------------------")
+    // console.log("----------------------------------")
     const compilerHost = createCompilerHost(options, sourceFilesCache);
     const program = ts.createProgram(fileNames, options, compilerHost, oldProgram);
     return program;
@@ -98,12 +98,11 @@ function updateProgram(
 
 function getDecorations(
     context: ServiceContext,
-    fileName: string,
-    isRefresh?:boolean
+    fileName: string
 ): ReadonlyArray<Decoration> {
-  if(isRefresh){
-    updateCachedSourceFileBack(context,fileName)
-  }
+  // if(isRefresh){
+    // updateCachedSourceFileBack(context,fileName)
+  // }
     const sourceFile = context.sourceFilesCache.get(fileName);
     // const sourceFile = context.sourceFile.getFullText();
     if (!sourceFile) {
@@ -116,7 +115,48 @@ function getDecorations(
     const result: Decoration[] = [];
     const skipTypes = new WeakSet<ts.Node>();
     aux(sourceFile);
-    return result;
+    var temp:any = [];
+//			var child = [];
+      var store:any = {};
+      var arr = result;
+			for(var i = 0; i < arr.length; i++) {
+				var item = arr[i];
+				if(store.hasOwnProperty(item.startPosition.line)){
+					
+				}else{
+					store[item.startPosition.line] = []
+				}
+				var child = store[item.startPosition.line]
+				var before = child[child.length - 1];
+				if(!before) {
+					child.push(arr[i])
+				} else {
+					// 判断是否在同一行
+//					if(item.startPosition.line === before.startPosition.line) {
+						if(before.textAfter&&item.textAfter) {
+							//判断位置是否覆盖
+							var wordWidth = before.textAfter.length
+							var beforeStartPosition = before.endPosition.character + wordWidth
+							if(beforeStartPosition > item.endPosition.character) {
+								item.endPosition.character = item.endPosition.character + wordWidth
+							} else {
+
+							}
+						}
+
+						child.push(arr[i])
+      }
+    }
+			var keyArray = Object.keys(store)
+			function compare(a:any,b:any){
+			    return a-b;
+			};
+			keyArray.sort(compare);
+			keyArray.forEach((item)=>{
+				temp.push(store[item])
+      })
+      // result = temp
+    return temp.flat();
 
     function aux(node: ts.Node): void {
         node.forEachChild(aux);
@@ -337,33 +377,33 @@ function notifyFileChange(
             throw assertNever(fileChangeType);
     }
 }
-function updateCachedSourceFileBack(
-  context: ServiceContext,
-  fileName: string
-): void {
-  const cachedSourceFile = context.sourceFilesCache.get(fileName);
-  if (!cachedSourceFile) {
-      return context.updateProgram();
-  }
+// function updateCachedSourceFileBack(
+//   context: ServiceContext,
+//   fileName: string
+// ): void {
+//   const cachedSourceFile = context.sourceFilesCache.get(fileName);
+//   if (!cachedSourceFile) {
+//       return context.updateProgram();
+//   }
 
-  const fileContent = ts.sys.readFile(fileName, context.getProgram().getCompilerOptions().charset);
-  if (fileContent === undefined) {
-      logError(`Failed to read file content for '${fileName}'.`);
-      return;
-  }
-  console.log("fileContent="+fileContent)
-  console.log("cachedSourceFile="+cachedSourceFile.text)
-  if (fileContent === cachedSourceFile.text) {
-      return;
-  }
+//   const fileContent = ts.sys.readFile(fileName, context.getProgram().getCompilerOptions().charset);
+//   if (fileContent === undefined) {
+//       logError(`Failed to read file content for '${fileName}'.`);
+//       return;
+//   }
+//   console.log("fileContent="+fileContent)
+//   console.log("cachedSourceFile="+cachedSourceFile.text)
+//   if (fileContent === cachedSourceFile.text) {
+//       return;
+//   }
 
-  const newSourceFile = cachedSourceFile.update(fileContent, {
-      newLength: fileContent.length,
-      span: { start: 0, length: cachedSourceFile.text.length }
-  });
-  context.sourceFilesCache.set(fileName, newSourceFile);
-  return context.updateProgram();
-}
+//   const newSourceFile = cachedSourceFile.update(fileContent, {
+//       newLength: fileContent.length,
+//       span: { start: 0, length: cachedSourceFile.text.length }
+//   });
+//   context.sourceFilesCache.set(fileName, newSourceFile);
+//   return context.updateProgram();
+// }
 
 function updateCachedSourceFile(
     context: ServiceContext,
@@ -379,8 +419,8 @@ function updateCachedSourceFile(
         logError(`Failed to read file content for '${fileName}'.`);
         return;
     }
-    console.log("fileContent="+fileContent)
-    console.log("cachedSourceFile="+cachedSourceFile.text)
+    // console.log("fileContent="+fileContent)
+    // console.log("cachedSourceFile="+cachedSourceFile.text)
     if (fileContent === cachedSourceFile.text) {
         return;
     }

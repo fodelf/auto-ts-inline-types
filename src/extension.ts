@@ -43,7 +43,7 @@ function createServiceForExtension(
         rootPath,
         configuration,
        );
-    updateDecorations(service, configuration);
+    updateDecorations(service);
 
     // const fileWatcher = vscode.workspace.createFileSystemWatcher('{!node_modules,**}/*.{ts,js,tsx,jsx}');
     // fileWatcher.onDidCreate(e => service.notifyFileChange(normalizeFileName(e.fsPath), FileChangeTypes.Created));
@@ -71,17 +71,19 @@ function mapConfiguration(configuration: vscode.WorkspaceConfiguration): Configu
 async function updateDecorations(
     // decorationType: vscode.TextEditorDecorationType,
     service: Service,
-    configuration: Configuration
+    // configuration?: Configuration
 ) {
     const visibleTextEditors = vscode.window.visibleTextEditors.filter(isSupportedLanguage);
-    console.log("visibleTextEditors =" + visibleTextEditors.length)
+    // console.log("visibleTextEditors =" + visibleTextEditors.length)
     for (const visibleTextEditor of visibleTextEditors) {
         const fileName = visibleTextEditor.document.fileName;
-        console.log("fileName =" + fileName)
-        var decorations = service.getDecorations(normalizeFileName(fileName));
+        // console.log("fileName =" + fileName)
+        var decorations = service.getDecorations(normalizeFileName(fileName))
+        // var decorations = [{"textBefore":"","textAfter":": string","startPosition":{"line":0,"character":4},"endPosition":{"line":0,"character":6},"isWarning":false},{"textBefore":"","textAfter":": any","startPosition":{"line":1,"character":12},"endPosition":{"line":1,"character":14},"isWarning":true},{"textBefore":"","textAfter":": void","startPosition":{"line":1,"character":0},"endPosition":{"line":1,"character":20},"isWarning":false},{"textBefore":"message: ","textAfter":"","startPosition":{"line":2,"character":14},"endPosition":{"line":2,"character":18},"isWarning":false}];
+        // await visibleTextEditor.insertSnippet(new vscode.SnippetString(JSON.stringify(decorations)),new vscode.Position(0, 0))
         var len = decorations.length
         for(let i =0 ; i< len;i++){
-          var decoration = decorations[0];
+          var decoration = decorations[i];
           if(!decoration){
             return;
           }
@@ -93,24 +95,22 @@ async function updateDecorations(
             let orgin = visibleTextEditor.document.getText(range)
             let string = decoration.textAfter + orgin
             await visibleTextEditor.insertSnippet(new vscode.SnippetString(string),range)
-            await visibleTextEditor.document.save()
+            // await visibleTextEditor.document.save()
           // await service.notifyFileChange(normalizeFileName(fileName), FileChangeTypes.Changed)
             const rootPath = vscode.workspace.rootPath;
             if (!rootPath) {
                 logError(`No root path found. Aborting.`);
                 return;
             }
-            if(i == (len-1)){
-              return;
-            }
-            let  service = createService(
-              rootPath,
-              configuration,
-            );
-            decorations = service.getDecorations(normalizeFileName(fileName));
+            
+            // let  service = createService(
+            //   rootPath,
+            //   configuration,
+            // );
+            // decorations = service.getDecorations(normalizeFileName(fileName));
           }
           if(decoration.textBefore){
-            decorations = decorations.slice(1)
+            // decorations = decorations.slice(1)
             // let startPosition = mapServicePosition(decoration.startPosition);
             // let endPosition = mapServicePosition(decoration.endPosition);
             // let range = new vscode.Range(startPosition,endPosition)
@@ -120,12 +120,13 @@ async function updateDecorations(
             // await visibleTextEditor.document.save()
             // decorations = service.getDecorations(normalizeFileName(fileName),true);
           }
-          
         }
         // console.log(decorations)
         // const decorationOptions = decorations.reduce<vscode.DecorationOptions[]>((arr, d) => arr.concat(createDecorationOptions(d, configuration)), []);
         // visibleTextEditor.setDecorations(decorationType, decorationOptions);
     }
+     await vscode.window.activeTextEditor?.document.save();
+    vscode.window.showInformationMessage('添加类型完成!');
 }
 
 // function createDecorationOptions(decoration: Decoration, configuration: Configuration): vscode.DecorationOptions[] {
