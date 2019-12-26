@@ -11,7 +11,8 @@ export function activate(extensionContext: vscode.ExtensionContext): void {
      * @description: 默认描述
      * @param {type}: 默认参数
      * @return {type}: 默认类型
-     */    
+     */ 
+    vscode.window.showInformationMessage('开始补充请等待!');   
     const rootPath = vscode.workspace.rootPath;
     if (!rootPath) {
         logError(`No root path found. Aborting.`);
@@ -87,7 +88,7 @@ async function updateDecorations(
           if(!decoration){
             return;
           }
-          if(decoration.textAfter){
+          if(decoration.textAfter &&(!decoration.textBefore)){
             // let startPosition = mapServicePosition(decoration.startPosition);
             let endPosition = mapServicePosition(decoration.endPosition);
             let nextEndPosition = mapServicePosition(decoration.endPosition, 1);
@@ -108,6 +109,19 @@ async function updateDecorations(
             //   configuration,
             // );
             // decorations = service.getDecorations(normalizeFileName(fileName));
+          }
+          if(decoration.textAfter && decoration.textBefore){
+            let startPosition = mapServicePosition(decoration.startPosition);
+            let endPosition = mapServicePosition(decoration.endPosition);
+            let nextEndPosition = mapServicePosition(decoration.endPosition, 1);
+            let staRange = new vscode.Range(startPosition,endPosition)
+            let strgin = visibleTextEditor.document.getText(staRange)
+            let ststring = decoration.textAfter + strgin
+            await visibleTextEditor.insertSnippet(new vscode.SnippetString(ststring),staRange)
+            let range = new vscode.Range(endPosition,nextEndPosition)
+            let orgin = visibleTextEditor.document.getText(range)
+            let string = decoration.textAfter + orgin
+            await visibleTextEditor.insertSnippet(new vscode.SnippetString(string),range)
           }
           if(decoration.textBefore){
             // decorations = decorations.slice(1)
